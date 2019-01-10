@@ -29,8 +29,8 @@ void error_neg_fun(int s, char *msg, char *file, int line) {
 
 int main(int argc, char *argv[]) {
     int port;
-    if (argc != 2) {
-        fprintf(stderr, "usage: %s <port>", program_invocation_short_name);
+    if (argc != 2 && argc != 4) {
+        fprintf(stderr, "usage: %s <port> [<keepalive-ip> <keepalive-port>]\n", program_invocation_short_name);
         exit(1);
     }
     port = atoi(argv[1]);
@@ -77,7 +77,25 @@ int main(int argc, char *argv[]) {
                    sizeof(struct sockaddr_in)),
               "bind");
 
-    pause();
+    // In the 3 parameter mode, we are sending RFC3948 NAT-Keepalive packets
+    if (argc == 4) {
+        int target_port = atoi(argv[3]);
+        struct in_addr target_address;
+        error_neg(
+                  inet_pton(AF_INET, argv[2], &target_address) ? 0 : -1,
+                  "inet_pton");
+
+        while (1) {
+            error_neg(
+                      sendto(sock, &(char) { 0xFF }, 1, 0,
+                             &(const struct sockaddr_in) { AF_INET, htons(target_port), target_address, { 0 } },
+                             sizeof(struct sockaddr_in)),
+                      "sendto");
+            sleep(5);
+        }
+    } else {
+        pause();
+    }
 
     return 0;
 }

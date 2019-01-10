@@ -319,7 +319,13 @@ Use it like this e.g. on side A:
 
     cd tools
     make
-    ./ipsec_udp_decap 61525
+    ./ipsec_udp_decap 61525 31.1.2.3 10421
+
+The tool's only important argument is the first one which specifies
+the incoming UDP port for the packets that the kernel needs to
+decapsulate.  The optional second and third argument just enables
+RFC3948 NAT-Keepalive, so we don't lose our hard earned UDP hole if
+there is no traffic in the tunnel.
 
 # Network oddity of the day: asymmetric latency
 
@@ -332,9 +338,6 @@ latency in the slow direction.
 On the other hand, just leaving a `ping -i 0.1` running in the fast
 direction magically fixed the latency in the slow direction.  Sending
 200Mbyte/day is acceptable nowadays, I guess.
-
-Running some activity on the tunnel is useful anyway, so that the
-assigned UDP hole doesn't get idle.
 
 # Useful commands
 
